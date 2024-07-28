@@ -12,7 +12,7 @@
         let socket;
 
         function connectWebSocket() {
-            socket = new WebSocket('ws://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // URL du serveur WebSocket
+            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // URL du serveur WebSocket
 
             socket.onopen = () => {
                 console.log('Connecté au serveur WebSocket');
