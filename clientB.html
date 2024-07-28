@@ -12,28 +12,34 @@
         let socket;
 
         function connectWebSocket() {
-            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // URL du serveur WebSocket
+            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // Remplacez par l'URL de votre serveur WebSocket
 
             socket.onopen = () => {
                 console.log('Connecté au serveur WebSocket');
             };
 
             socket.onmessage = event => {
-                const message = JSON.parse(event.data);
-                console.log('Message reçu:', message);
-
-                if (message.type === 'offer') {
-                    peerConnection.setRemoteDescription(new RTCSessionDescription(message.data))
-                        .then(() => peerConnection.createAnswer())
-                        .then(answer => peerConnection.setLocalDescription(answer))
-                        .then(() => {
-                            socket.send(JSON.stringify({ type: 'answer', data: peerConnection.localDescription }));
-                        })
-                        .catch(error => {
-                            console.error('Erreur lors de la réponse:', error);
-                        });
-                } else if (message.type === 'candidate') {
-                    peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
+                if (event.data instanceof Blob) {
+                    // Convertir le Blob en texte
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        try {
+                            const message = JSON.parse(reader.result);
+                            handleMessage(message);
+                        } catch (error) {
+                            console.error('Erreur lors du traitement du message:', error);
+                        }
+                    };
+                    reader.readAsText(event.data);
+                } else if (typeof event.data === 'string') {
+                    try {
+                        const message = JSON.parse(event.data);
+                        handleMessage(message);
+                    } catch (error) {
+                        console.error('Erreur lors du traitement du message:', error);
+                    }
+                } else {
+                    console.error('Données reçues non-JSON:', event.data);
                 }
             };
 
@@ -46,6 +52,27 @@
                 // Reconnexion en cas de fermeture
                 setTimeout(connectWebSocket, 1000);
             };
+        }
+
+        function handleMessage(message) {
+            console.log('Message reçu:', message);
+
+            if (message.type === 'offer') {
+                peerConnection.setRemoteDescription(new RTCSessionDescription(message.data))
+                    .then(() => peerConnection.createAnswer())
+                    .then(answer => peerConnection.setLocalDescription(answer))
+                    .then(() => {
+                        socket.send(JSON.stringify({ type: 'answer', data: peerConnection.localDescription }));
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la réponse:', error);
+                    });
+            } else if (message.type === 'candidate') {
+                peerConnection.addIceCandidate(new RTCIceCandidate(message.data))
+                    .catch(error => {
+                        console.error('Erreur lors de l\'ajout du candidat ICE:', error);
+                    });
+            }
         }
 
         connectWebSocket();
