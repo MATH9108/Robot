@@ -1,25 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WebRTC - Client B</title>
+    <title>WebRTC - Client A</title>
 </head>
 <body>
-    <h2>Client B (Récepteur)</h2>
-    <video id="remoteVideo" autoplay playsinline style="width: 100%; height: auto; border: 1px solid black;"></video>
+    <h2>Client A (Émetteur)!</h2>
+    <video id="localVideo" autoplay playsinline></video>
     <script>
-        const remoteVideo = document.getElementById('remoteVideo');
+        const localVideo = document.getElementById('localVideo');
         const peerConnection = new RTCPeerConnection();
         let socket;
 
         function connectWebSocket() {
-            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // URL du serveur WebSocket
+            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // Remplacez par l'URL de votre serveur WebSocket
 
             socket.onopen = () => {
                 console.log('Connecté au serveur WebSocket');
             };
 
             socket.onmessage = event => {
-                if (typeof event.data === 'string') {
+                if (event.data instanceof Blob) {
+                    // Convertir le Blob en texte
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        try {
+                            const message = JSON.parse(reader.result);
+                            handleMessage(message);
+                        } catch (error) {
+                            console.error('Erreur lors du traitement du message:', error);
+                        }
+                    };
+                    reader.readAsText(event.data);
+                } else if (typeof event.data === 'string') {
                     try {
                         const message = JSON.parse(event.data);
                         handleMessage(message);
@@ -37,22 +49,18 @@
 
             socket.onclose = event => {
                 console.log(`Déconnexion du serveur WebSocket: Code ${event.code}, Raison: ${event.reason}`);
-                setTimeout(connectWebSocket, 1000); // Reconnexion en cas de fermeture
+                // Reconnexion en cas de fermeture
+                setTimeout(connectWebSocket, 1000);
             };
         }
 
         function handleMessage(message) {
             console.log('Message reçu:', message);
 
-            if (message.type === 'offer') {
+            if (message.type === 'answer') {
                 peerConnection.setRemoteDescription(new RTCSessionDescription(message.data))
-                    .then(() => peerConnection.createAnswer())
-                    .then(answer => peerConnection.setLocalDescription(answer))
-                    .then(() => {
-                        socket.send(JSON.stringify({ type: 'answer', data: peerConnection.localDescription }));
-                    })
                     .catch(error => {
-                        console.error('Erreur lors de la réponse:', error);
+                        console.error('Erreur lors de la définition de la description distante:', error);
                     });
             } else if (message.type === 'candidate') {
                 peerConnection.addIceCandidate(new RTCIceCandidate(message.data))
@@ -64,15 +72,23 @@
 
         connectWebSocket();
 
-        peerConnection.ontrack = event => {
-            console.log('Track reçue:', event);
-            if (event.streams && event.streams[0]) {
-                remoteVideo.srcObject = event.streams[0];
-                console.log('Flux vidéo associé à remoteVideo.');
-            } else {
-                console.error('Aucun flux vidéo trouvé dans les données reçues.');
-            }
-        };
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                localVideo.srcObject = stream;
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+                peerConnection.createOffer()
+                    .then(offer => peerConnection.setLocalDescription(offer))
+                    .then(() => {
+                        socket.send(JSON.stringify({ type: 'offer', data: peerConnection.localDescription }));
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la création de l\'offre:', error);
+                    });
+            })
+            .catch(error => {
+                console.error('Erreur lors de l\'accès à la caméra:', error);
+            });
 
         peerConnection.onicecandidate = event => {
             if (event.candidate) {
