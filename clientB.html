@@ -9,7 +9,7 @@
     <script>
         const remoteVideo = document.getElementById('remoteVideo');
         const peerConnection = new RTCPeerConnection();
-        const socket = new WebSocket('wss://<your-heroku-app-name>.herokuapp.com'); // Remplacez <your-heroku-app-name> par le nom de votre application Heroku
+        const socket = new WebSocket('wss://nameless-caverns-19262.herokuapp.com'); // Remplacez <your-heroku-app-name> par le nom de votre application Heroku
 
         // Lorsque le serveur envoie un message
         socket.onmessage = event => {
