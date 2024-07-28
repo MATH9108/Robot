@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WebRTC - Client A</title>
+    <title>WebRTC - Client B</title>
 </head>
 <body>
-    <h2>Client A (Émetteur)!</h2>
-    <video id="localVideo" autoplay playsinline></video>
+    <h2>Client B (Récepteur)!</h2>
+    <video id="remoteVideo" autoplay playsinline style="width: 100%; height: auto;"></video>
     <script>
-        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
         const peerConnection = new RTCPeerConnection();
         let socket;
 
@@ -20,7 +20,6 @@
 
             socket.onmessage = event => {
                 if (event.data instanceof Blob) {
-                    // Convertir le Blob en texte
                     const reader = new FileReader();
                     reader.onload = function() {
                         try {
@@ -49,7 +48,6 @@
 
             socket.onclose = event => {
                 console.log(`Déconnexion du serveur WebSocket: Code ${event.code}, Raison: ${event.reason}`);
-                // Reconnexion en cas de fermeture
                 setTimeout(connectWebSocket, 1000);
             };
         }
@@ -57,10 +55,15 @@
         function handleMessage(message) {
             console.log('Message reçu:', message);
 
-            if (message.type === 'answer') {
+            if (message.type === 'offer') {
                 peerConnection.setRemoteDescription(new RTCSessionDescription(message.data))
+                    .then(() => peerConnection.createAnswer())
+                    .then(answer => peerConnection.setLocalDescription(answer))
+                    .then(() => {
+                        socket.send(JSON.stringify({ type: 'answer', data: peerConnection.localDescription }));
+                    })
                     .catch(error => {
-                        console.error('Erreur lors de la définition de la description distante:', error);
+                        console.error('Erreur lors de la réponse:', error);
                     });
             } else if (message.type === 'candidate') {
                 peerConnection.addIceCandidate(new RTCIceCandidate(message.data))
@@ -72,23 +75,15 @@
 
         connectWebSocket();
 
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                localVideo.srcObject = stream;
-                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-
-                peerConnection.createOffer()
-                    .then(offer => peerConnection.setLocalDescription(offer))
-                    .then(() => {
-                        socket.send(JSON.stringify({ type: 'offer', data: peerConnection.localDescription }));
-                    })
-                    .catch(error => {
-                        console.error('Erreur lors de la création de l\'offre:', error);
-                    });
-            })
-            .catch(error => {
-                console.error('Erreur lors de l\'accès à la caméra:', error);
-            });
+        peerConnection.ontrack = event => {
+            console.log('Track reçue:', event);
+            console.log('Streams reçues:', event.streams);
+            if (event.streams && event.streams[0]) {
+                remoteVideo.srcObject = event.streams[0];
+            } else {
+                console.error('Aucun flux vidéo trouvé dans les données reçues.');
+            }
+        };
 
         peerConnection.onicecandidate = event => {
             if (event.candidate) {
