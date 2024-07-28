@@ -5,7 +5,7 @@
 </head>
 <body>
     <h2>Client B (Récepteur)!</h2>
-    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="remoteVideo" autoplay playsinline style="width: 100%; height: auto;"></video>
     <script>
         const remoteVideo = document.getElementById('remoteVideo');
         const peerConnection = new RTCPeerConnection();
@@ -79,7 +79,12 @@
 
         peerConnection.ontrack = event => {
             console.log('Track reçue:', event);
-            remoteVideo.srcObject = event.streams[0];
+            console.log('Streams reçues:', event.streams);
+            if (event.streams && event.streams[0]) {
+                remoteVideo.srcObject = event.streams[0];
+            } else {
+                console.error('Aucun flux vidéo trouvé dans les données reçues.');
+            }
         };
 
         peerConnection.onicecandidate = event => {
