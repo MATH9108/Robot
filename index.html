@@ -9,30 +9,38 @@
     <script>
         const localVideo = document.getElementById('localVideo');
         const peerConnection = new RTCPeerConnection();
-        const socket = new WebSocket('wss://nameless-caverns-19262.herokuapp.com'); // URL du serveur WebSocket
+        let socket;
 
-        socket.onopen = () => {
-            console.log('Connecté au serveur WebSocket');
-        };
+        function connectWebSocket() {
+            socket = new WebSocket('wss://nameless-caverns-19262.herokuapp.com'); // URL du serveur WebSocket
 
-        socket.onmessage = event => {
-            const message = JSON.parse(event.data);
-            console.log('Message reçu:', message);
+            socket.onopen = () => {
+                console.log('Connecté au serveur WebSocket');
+            };
 
-            if (message.type === 'answer') {
-                peerConnection.setRemoteDescription(new RTCSessionDescription(message.data));
-            } else if (message.type === 'candidate') {
-                peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
-            }
-        };
+            socket.onmessage = event => {
+                const message = JSON.parse(event.data);
+                console.log('Message reçu:', message);
 
-        socket.onerror = error => {
-            console.error('Erreur WebSocket:', error);
-        };
+                if (message.type === 'answer') {
+                    peerConnection.setRemoteDescription(new RTCSessionDescription(message.data));
+                } else if (message.type === 'candidate') {
+                    peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
+                }
+            };
 
-        socket.onclose = () => {
-            console.log('Déconnexion du serveur WebSocket');
-        };
+            socket.onerror = error => {
+                console.error('Erreur WebSocket:', error);
+            };
+
+            socket.onclose = event => {
+                console.log(`Déconnexion du serveur WebSocket: Code ${event.code}, Raison: ${event.reason}`);
+                // Reconnexion en cas de fermeture
+                setTimeout(connectWebSocket, 1000);
+            };
+        }
+
+        connectWebSocket();
 
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
