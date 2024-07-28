@@ -4,19 +4,38 @@
     <title>WebRTC - Client A</title>
 </head>
 <body>
+    <h2>Client A (Émetteur)</h2>
     <video id="localVideo" autoplay playsinline></video>
     <script>
         const localVideo = document.getElementById('localVideo');
         const peerConnection = new RTCPeerConnection();
-        const socket = new WebSocket('wss://nameless-caverns-19262.com');
+        const socket = new WebSocket('wss://nameless-caverns-19262.herokuapp.com'); // Remplacez <your-heroku-app-name> par le nom de votre application Heroku
 
+        // Lorsque le serveur envoie un message
         socket.onmessage = event => {
             const message = JSON.parse(event.data);
+            console.log('Message reçu:', message);
+
             if (message.type === 'answer') {
                 peerConnection.setRemoteDescription(new RTCSessionDescription(message.data));
             } else if (message.type === 'candidate') {
                 peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
             }
+        };
+
+        // Lorsque la connexion WebSocket est ouverte
+        socket.onopen = () => {
+            console.log('Connecté au serveur WebSocket');
+        };
+
+        // Lorsque la connexion WebSocket rencontre une erreur
+        socket.onerror = error => {
+            console.error('Erreur WebSocket:', error);
+        };
+
+        // Lorsque la connexion WebSocket est fermée
+        socket.onclose = () => {
+            console.log('Déconnexion du serveur WebSocket');
         };
 
         navigator.mediaDevices.getUserMedia({ video: true })
@@ -28,6 +47,9 @@
             .then(offer => peerConnection.setLocalDescription(offer))
             .then(() => {
                 socket.send(JSON.stringify({ type: 'offer', data: peerConnection.localDescription }));
+            })
+            .catch(error => {
+                console.error('Erreur lors de la capture de la vidéo:', error);
             });
 
         peerConnection.onicecandidate = event => {
@@ -35,6 +57,11 @@
                 socket.send(JSON.stringify({ type: 'candidate', data: event.candidate }));
             }
         };
+
+        peerConnection.ontrack = event => {
+            console.log('Track reçue:', event);
+        };
+
     </script>
 </body>
 </html>
