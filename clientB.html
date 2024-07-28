@@ -78,6 +78,7 @@
         peerConnection.ontrack = event => {
             console.log('Track reçue:', event);
             console.log('Streams reçues:', event.streams);
+            console.log('Streams reçues:', event.streams[0]);
             if (event.streams && event.streams[0]) {
                 remoteVideo.srcObject = event.streams[0];
             } else {
