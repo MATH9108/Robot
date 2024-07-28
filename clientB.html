@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebRTC - Client B</title>
+</head>
+<body>
+    <video id="remoteVideo" autoplay playsinline></video>
+    <script>
+        const remoteVideo = document.getElementById('remoteVideo');
+        const peerConnection = new RTCPeerConnection();
+        const socket = new WebSocket('wss://<your-heroku-app-name>.herokuapp.com');
+
+        socket.onmessage = event => {
+            const message = JSON.parse(event.data);
+            if (message.type === 'offer') {
+                peerConnection.setRemoteDescription(new RTCSessionDescription(message.data))
+                    .then(() => peerConnection.createAnswer())
+                    .then(answer => peerConnection.setLocalDescription(answer))
+                    .then(() => {
+                        socket.send(JSON.stringify({ type: 'answer', data: peerConnection.localDescription }));
+                    });
+            } else if (message.type === 'candidate') {
+                peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
+            }
+        };
+
+        peerConnection.ontrack = event => {
+            remoteVideo.srcObject = event.streams[0];
+        };
+
+        peerConnection.onicecandidate = event => {
+            if (event.candidate) {
+                socket.send(JSON.stringify({ type: 'candidate', data: event.candidate }));
+            }
+        };
+    </script>
+</body>
+</html>
