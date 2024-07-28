@@ -4,42 +4,39 @@
     <title>WebRTC - Client A</title>
 </head>
 <body>
-    <h2>Client A (Émetteur)!</h2>
-    <video id="localVideo" autoplay playsinline></video>
+    <h2>Client A (Émetteur)</h2>
+    <video id="localVideo" autoplay muted playsinline></video>
     <script>
         const localVideo = document.getElementById('localVideo');
         const peerConnection = new RTCPeerConnection();
         let socket;
 
         function connectWebSocket() {
-            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // Remplacez par l'URL de votre serveur WebSocket
+            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // URL du serveur WebSocket
 
             socket.onopen = () => {
                 console.log('Connecté au serveur WebSocket');
             };
 
             socket.onmessage = event => {
-                if (event.data instanceof Blob) {
-                    // Convertir le Blob en texte
-                    const reader = new FileReader();
-                    reader.onload = function() {
-                        try {
-                            const message = JSON.parse(reader.result);
-                            handleMessage(message);
-                        } catch (error) {
-                            console.error('Erreur lors du traitement du message:', error);
-                        }
-                    };
-                    reader.readAsText(event.data);
-                } else if (typeof event.data === 'string') {
-                    try {
-                        const message = JSON.parse(event.data);
-                        handleMessage(message);
-                    } catch (error) {
-                        console.error('Erreur lors du traitement du message:', error);
-                    }
-                } else {
-                    console.error('Données reçues non-JSON:', event.data);
+                const message = JSON.parse(event.data);
+                console.log('Message reçu:', message);
+
+                if (message.type === 'offer') {
+                    peerConnection.setRemoteDescription(new RTCSessionDescription(message.data))
+                        .then(() => peerConnection.createAnswer())
+                        .then(answer => peerConnection.setLocalDescription(answer))
+                        .then(() => {
+                            socket.send(JSON.stringify({ type: 'answer', data: peerConnection.localDescription }));
+                        })
+                        .catch(error => {
+                            console.error('Erreur lors de la réponse:', error);
+                        });
+                } else if (message.type === 'candidate') {
+                    peerConnection.addIceCandidate(new RTCIceCandidate(message.data))
+                        .catch(error => {
+                            console.error('Erreur lors de l\'ajout du candidat ICE:', error);
+                        });
                 }
             };
 
@@ -49,51 +46,32 @@
 
             socket.onclose = event => {
                 console.log(`Déconnexion du serveur WebSocket: Code ${event.code}, Raison: ${event.reason}`);
-                // Reconnexion en cas de fermeture
-                setTimeout(connectWebSocket, 1000);
+                setTimeout(connectWebSocket, 1000); // Reconnexion en cas de fermeture
             };
         }
 
-        function handleMessage(message) {
-            console.log('Message reçu:', message);
-
-            if (message.type === 'answer') {
-                peerConnection.setRemoteDescription(new RTCSessionDescription(message.data))
-                    .catch(error => {
-                        console.error('Erreur lors de la définition de la description distante:', error);
-                    });
-            } else if (message.type === 'candidate') {
-                peerConnection.addIceCandidate(new RTCIceCandidate(message.data))
-                    .catch(error => {
-                        console.error('Erreur lors de l\'ajout du candidat ICE:', error);
-                    });
-            }
+        function startVideo() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    localVideo.srcObject = stream;
+                    stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+                })
+                .catch(error => {
+                    console.error('Erreur lors de l\'accès à la caméra:', error);
+                });
         }
 
         connectWebSocket();
-
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                localVideo.srcObject = stream;
-                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-
-                peerConnection.createOffer()
-                    .then(offer => peerConnection.setLocalDescription(offer))
-                    .then(() => {
-                        socket.send(JSON.stringify({ type: 'offer', data: peerConnection.localDescription }));
-                    })
-                    .catch(error => {
-                        console.error('Erreur lors de la création de l\'offre:', error);
-                    });
-            })
-            .catch(error => {
-                console.error('Erreur lors de l\'accès à la caméra:', error);
-            });
+        startVideo();
 
         peerConnection.onicecandidate = event => {
             if (event.candidate) {
                 socket.send(JSON.stringify({ type: 'candidate', data: event.candidate }));
             }
+        };
+
+        peerConnection.ontrack = event => {
+            console.log('Track reçue:', event);
         };
     </script>
 </body>
