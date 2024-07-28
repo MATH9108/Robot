@@ -4,34 +4,22 @@
     <title>WebRTC - Client B</title>
 </head>
 <body>
-    <h2>Client B (Récepteur)!</h2>
-    <video id="remoteVideo" autoplay playsinline style="width: 100%; height: auto;"></video>
+    <h2>Client B (Récepteur)</h2>
+    <video id="remoteVideo" autoplay playsinline style="width: 100%; height: auto; border: 1px solid black;"></video>
     <script>
         const remoteVideo = document.getElementById('remoteVideo');
         const peerConnection = new RTCPeerConnection();
         let socket;
 
         function connectWebSocket() {
-            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // Remplacez par l'URL de votre serveur WebSocket
+            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // URL du serveur WebSocket
 
             socket.onopen = () => {
                 console.log('Connecté au serveur WebSocket');
             };
 
             socket.onmessage = event => {
-                if (event.data instanceof Blob) {
-                    // Convertir le Blob en texte
-                    const reader = new FileReader();
-                    reader.onload = function() {
-                        try {
-                            const message = JSON.parse(reader.result);
-                            handleMessage(message);
-                        } catch (error) {
-                            console.error('Erreur lors du traitement du message:', error);
-                        }
-                    };
-                    reader.readAsText(event.data);
-                } else if (typeof event.data === 'string') {
+                if (typeof event.data === 'string') {
                     try {
                         const message = JSON.parse(event.data);
                         handleMessage(message);
@@ -49,8 +37,7 @@
 
             socket.onclose = event => {
                 console.log(`Déconnexion du serveur WebSocket: Code ${event.code}, Raison: ${event.reason}`);
-                // Reconnexion en cas de fermeture
-                setTimeout(connectWebSocket, 1000);
+                setTimeout(connectWebSocket, 1000); // Reconnexion en cas de fermeture
             };
         }
 
@@ -79,9 +66,9 @@
 
         peerConnection.ontrack = event => {
             console.log('Track reçue:', event);
-            console.log('Streams reçues:', event.streams);
             if (event.streams && event.streams[0]) {
                 remoteVideo.srcObject = event.streams[0];
+                console.log('Flux vidéo associé à remoteVideo.');
             } else {
                 console.error('Aucun flux vidéo trouvé dans les données reçues.');
             }
