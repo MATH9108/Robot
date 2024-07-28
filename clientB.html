@@ -9,9 +9,12 @@
     <script>
         const remoteVideo = document.getElementById('remoteVideo');
         const peerConnection = new RTCPeerConnection();
-        const socket = new WebSocket('wss://nameless-caverns-19262.herokuapp.com'); // Remplacez <your-heroku-app-name> par le nom de votre application Heroku
+        const socket = new WebSocket('wss://nameless-caverns-19262.herokuapp.com'); // URL du serveur WebSocket
 
-        // Lorsque le serveur envoie un message
+        socket.onopen = () => {
+            console.log('Connecté au serveur WebSocket');
+        };
+
         socket.onmessage = event => {
             const message = JSON.parse(event.data);
             console.log('Message reçu:', message);
@@ -31,17 +34,10 @@
             }
         };
 
-        // Lorsque la connexion WebSocket est ouverte
-        socket.onopen = () => {
-            console.log('Connecté au serveur WebSocket');
-        };
-
-        // Lorsque la connexion WebSocket rencontre une erreur
         socket.onerror = error => {
             console.error('Erreur WebSocket:', error);
         };
 
-        // Lorsque la connexion WebSocket est fermée
         socket.onclose = () => {
             console.log('Déconnexion du serveur WebSocket');
         };
