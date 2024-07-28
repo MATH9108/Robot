@@ -7,21 +7,22 @@
 </head>
 <body>
     <h1>Client B</h1>
-    <video id="remoteVideo" autoplay></video>
+    <video id="remoteVideo" autoplay controls style="width: 100%; max-width: 800px;"></video>
     <script>
         // Créez une connexion WebSocket
-        const socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com');
+        const socket = new WebSocket('wss://votre-serveur-websocket'); // Remplacez par l'URL de votre serveur
 
-        // Lorsque le WebSocket reçoit un message
+        socket.onopen = function() {
+            console.log('Connexion WebSocket ouverte');
+        };
+
         socket.onmessage = function(event) {
-            const data = event.data;
+            console.log('Message reçu:', event.data);
 
             // Vérifiez si les données sont un Blob
-            if (data instanceof Blob) {
-                // Créez un URL de données pour le Blob
-                const url = URL.createObjectURL(data);
-                
-                // Trouvez ou créez un élément vidéo pour afficher le flux
+            if (event.data instanceof Blob) {
+                console.log('Blob reçu');
+                const url = URL.createObjectURL(event.data);
                 const videoElement = document.getElementById('remoteVideo');
                 videoElement.src = url;
 
@@ -32,7 +33,7 @@
             } else {
                 // Si les données ne sont pas un Blob, essayez de les parser comme du JSON
                 try {
-                    const json = JSON.parse(data);
+                    const json = JSON.parse(event.data);
                     console.log('Données JSON reçues:', json);
                 } catch (error) {
                     console.error('Erreur de parsing JSON:', error);
@@ -40,12 +41,10 @@
             }
         };
 
-        // Gérer les erreurs WebSocket
         socket.onerror = function(error) {
             console.error('Erreur WebSocket:', error);
         };
 
-        // Optionnel: gérer la fermeture de la connexion WebSocket
         socket.onclose = function(event) {
             console.log('WebSocket fermé:', event.reason);
         };
