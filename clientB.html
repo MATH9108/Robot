@@ -1,52 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client B</title>
+    <title>WebRTC - Client B</title>
 </head>
 <body>
-    <h1>Client B</h1>
-    <video id="remoteVideo" autoplay controls style="width: 100%; max-width: 800px;"></video>
+    <h2>Client B (Récepteur)!</h2>
+    <video id="remoteVideo" autoplay playsinline></video>
     <script>
-        // Créez une connexion WebSocket
-        const socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // Remplacez par l'URL de votre serveur
+        const remoteVideo = document.getElementById('remoteVideo');
+        const peerConnection = new RTCPeerConnection();
+        let socket;
 
-        socket.onopen = function() {
-            console.log('Connexion WebSocket ouverte');
-        };
+        function connectWebSocket() {
+            socket = new WebSocket('wss://nameless-caverns-19262-2b731442c0a5.herokuapp.com'); // URL du serveur WebSocket
 
-        socket.onmessage = function(event) {
-            console.log('Message reçu:', event.data);
+            socket.onopen = () => {
+                console.log('Connecté au serveur WebSocket');
+            };
 
-            // Vérifiez si les données sont un Blob
-            if (event.data instanceof Blob) {
-                console.log('Blob reçu');
-                const url = URL.createObjectURL(event.data);
-                const videoElement = document.getElementById('remoteVideo');
-                videoElement.src = url;
+            socket.onmessage = event => {
+                const message = JSON.parse(event.data);
+                console.log('Message reçu:', message);
 
-                // Nettoyez l'URL de l'objet après utilisation
-                videoElement.onload = () => {
-                    URL.revokeObjectURL(url);
-                };
-            } else {
-                // Si les données ne sont pas un Blob, essayez de les parser comme du JSON
-                try {
-                    const json = JSON.parse(event.data);
-                    console.log('Données JSON reçues:', json);
-                } catch (error) {
-                    console.error('Erreur de parsing JSON:', error);
+                if (message.type === 'offer') {
+                    peerConnection.setRemoteDescription(new RTCSessionDescription(message.data))
+                        .then(() => peerConnection.createAnswer())
+                        .then(answer => peerConnection.setLocalDescription(answer))
+                        .then(() => {
+                            socket.send(JSON.stringify({ type: 'answer', data: peerConnection.localDescription }));
+                        })
+                        .catch(error => {
+                            console.error('Erreur lors de la réponse:', error);
+                        });
+                } else if (message.type === 'candidate') {
+                    peerConnection.addIceCandidate(new RTCIceCandidate(message.data));
                 }
+            };
+
+            socket.onerror = error => {
+                console.error('Erreur WebSocket:', error);
+            };
+
+            socket.onclose = event => {
+                console.log(`Déconnexion du serveur WebSocket: Code ${event.code}, Raison: ${event.reason}`);
+                // Reconnexion en cas de fermeture
+                setTimeout(connectWebSocket, 1000);
+            };
+        }
+
+        connectWebSocket();
+
+        peerConnection.ontrack = event => {
+            console.log('Track reçue:', event);
+            remoteVideo.srcObject = event.streams[0];
+        };
+
+        peerConnection.onicecandidate = event => {
+            if (event.candidate) {
+                socket.send(JSON.stringify({ type: 'candidate', data: event.candidate }));
             }
-        };
-
-        socket.onerror = function(error) {
-            console.error('Erreur WebSocket:', error);
-        };
-
-        socket.onclose = function(event) {
-            console.log('WebSocket fermé:', event.reason);
         };
     </script>
 </body>
