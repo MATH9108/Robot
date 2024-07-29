@@ -11,6 +11,7 @@
     <div id="joystick-container">
         <div id="joystick"></div>
     </div>
+    <button id="startButton">Bluetooth</button>
     <button id="firedroite" disabled>Fire</button>
     <button id="firegauche" disabled>Fire</button>
     <button id="avance" disabled>▲</button>
@@ -116,9 +117,10 @@
         let bluetoothDevice;
         let characteristic;
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.getElementById('startButton').addEventListener('click', async () => {
             try {
                 await connectBluetooth();
+                document.getElementById('startButton').disabled = true;
                 document.getElementById('avance').disabled = false;
                 document.getElementById('recule').disabled = false;
                 document.getElementById('gauche').disabled = false;
@@ -129,8 +131,9 @@
             } catch (error) {
                 console.error('Bluetooth connection failed:', error);
             }
+        });
 
-            document.getElementById('avance').addEventListener('click', async () => {
+        document.getElementById('avance').addEventListener('click', async () => {
                 const data = String(degree) + String(avance) + "#";
                 if (data && characteristic) {
                     try {
@@ -144,9 +147,9 @@
                 } else {
                     alert('Please enter data to send');
                 }
-            });
+        });
 
-            document.getElementById('recule').addEventListener('click', async () => {
+        document.getElementById('recule').addEventListener('click', async () => {
                 const data = String(degree) + String(recule) + "#";
                 if (data && characteristic) {
                     try {
@@ -160,9 +163,9 @@
                 } else {
                     alert('Please enter data to send');
                 }
-            });
+        });
 
-            document.getElementById('droite').addEventListener('click', async () => {
+        document.getElementById('droite').addEventListener('click', async () => {
                 const data = String(degree) + String(droite) + "#";
                 if (data && characteristic) {
                     try {
@@ -176,9 +179,9 @@
                 } else {
                     alert('Please enter data to send');
                 }
-            });
+        });
 
-            document.getElementById('gauche').addEventListener('click', async () => {
+        document.getElementById('gauche').addEventListener('click', async () => {
                 const data = String(degree) + String(gauche) + "#";
                 if (data && characteristic) {
                     try {
@@ -192,7 +195,6 @@
                 } else {
                     alert('Please enter data to send');
                 }
-            });
         });
 
         async function connectBluetooth() {
