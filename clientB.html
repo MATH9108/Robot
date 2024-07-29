@@ -150,7 +150,7 @@
             joystick.style.left = `${limitedX}px`;
             joystick.style.top = `${limitedY}px`;
 
-            const angleInDegrees = (angle * (180 / Math.PI) + 360) % 360
+            const angleInDegrees = (angle * (180 / Math.PI) + 90 + 360) % 360
             const degree = Math.round(angleInDegrees)
         }
 
