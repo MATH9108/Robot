@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="clientB.css">
     <title>WebRTC - Client B</title>
 </head>
 <body>
-    <h2>Client B (Récepteur)!</h2>
-    <button onclick="connectWebSocket()">Reconnecter</button>
     <video id="remoteVideo" autoplay playsinline style="width: 100vw; height: 100vh;"></video>
+    <div id="joystick-container">
+        <div id="joystick"></div>
+    </div>
+    <button id="firedroite" onclick="">Fire</button>
+    <button id="firegauche" onclick="">Fire</button>
+    <button id="avance" onclick="">▲</button>
+    <button id="recule" onclick="">▼</button>
+    <button id="droite" onclick="">▶</button>
+    <button id="gauche" onclick="">◀</button>
+    <button id="reconnection" onclick="connectWebSocket()">Reconnecte</button>
+    <button id="arret" onclick="">Arret</button>
     <script>
         const remoteVideo = document.getElementById('remoteVideo');
         const peerConnection = new RTCPeerConnection();
@@ -92,6 +104,60 @@
                 socket.send(JSON.stringify({ type: 'candidate', data: event.candidate }));
             }
         };
+
+        const joystickContainer = document.getElementById('joystick-container');
+        const joystick = document.getElementById('joystick');
+
+        let joystickCenterX = joystickContainer.offsetWidth / 2;
+        let joystickCenterY = joystickContainer.offsetHeight / 2;
+        let joystickRadius = joystickContainer.offsetWidth / 2;
+
+        joystickContainer.addEventListener('touchstart', handleStart, false);
+        joystickContainer.addEventListener('touchmove', handleMove, false);
+        joystickContainer.addEventListener('touchend', handleEnd, false);
+
+        function handleStart(event) {
+            event.preventDefault();
+            const touch = event.touches[0];
+            moveJoystick(touch.clientX, touch.clientY);
+        }
+
+        function handleMove(event) {
+            event.preventDefault();
+            const touch = event.touches[0];
+            moveJoystick(touch.clientX, touch.clientY);
+        }
+
+        function handleEnd(event) {
+            event.preventDefault();
+            resetJoystick();
+        }
+
+        function moveJoystick(clientX, clientY) {
+            const rect = joystickContainer.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            const deltaX = x - joystickCenterX;
+            const deltaY = y - joystickCenterY;
+
+            const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), joystickRadius);
+            const angle = Math.atan2(deltaY, deltaX);
+
+            const limitedX = joystickCenterX + distance * Math.cos(angle);
+            const limitedY = joystickCenterY + distance * Math.sin(angle);
+
+            joystick.style.left = `${limitedX}px`;
+            joystick.style.top = `${limitedY}px`;
+
+            const angleInDegrees = (angle * (180 / Math.PI) + 360) % 360
+            const degree = Math.round(angleInDegrees)
+        }
+
+        function resetJoystick() {
+            joystick.style.left = '50%';
+            joystick.style.top = '50%';
+        }
     </script>
 </body>
 </html>
