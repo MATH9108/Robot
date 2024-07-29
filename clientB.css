@@ -1,0 +1,169 @@
+*{
+	font-family: Verdana, sans-serif;
+	margin: 0px;
+	padding: 0px;
+}
+
+html, body {
+  height: 100vh;
+  scroll-behavior: smooth;
+}
+
+body{
+    background-color: white;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+#joystick-container {
+    width: 200px;
+    height: 200px;
+    background-color: rgba(255, 255, 255, .5);
+    border: 1px solid gray;
+    border-radius: 50%;
+    top: 27%;
+    left: 5%;
+    position: absolute;
+    touch-action: none;
+}
+
+#joystick {
+    width: 75px;
+    height: 75px;
+    background-color: #555;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    touch-action: none;
+}
+
+#reconnection{
+    position: absolute;
+    top: 90%;
+    left: 35%;
+    border: 1px solid gray;
+    background-color: rgba(255, 255, 255, .5);
+    z-index: 1;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: large;
+}
+
+#reconnection:active{
+    background-color: rgba(112, 112, 112, 0.5); 
+}
+
+#arret{
+    position: absolute;
+    top: 90%;
+    right: 35%;
+    border: 1px solid gray;
+    background-color: rgb(255, 255, 255, .5);
+    z-index: 1;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: large;
+}
+
+#arret:active{
+    background-color: rgba(112, 112, 112, 0.5); 
+}
+
+#firedroite{
+    position: absolute;
+    top: 10%;
+    left: 40%;
+    border: 1px solid gray;
+    background-color: rgba(255, 255, 255, .5);
+    z-index: 1;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: large;
+}
+
+#firedroite:active{
+    background-color: rgba(112, 112, 112, 0.5); 
+}
+
+#firegauche{
+    position: absolute;
+    top: 10%;
+    right: 40%;
+    border: 1px solid gray;
+    background-color: rgb(255, 255, 255, .5);
+    z-index: 1;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: large;
+}
+
+#firegauche:active{
+    background-color: rgba(112, 112, 112, 0.5); 
+}
+
+#avance{
+    position: absolute;
+    top: 25%;
+    right: 15%;
+    border: 1px solid gray;
+    background-color: rgba(255, 255, 255, .5);
+    z-index: 1;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: large;
+}
+
+#avance:active{
+    background-color: rgba(112, 112, 112, 0.5); 
+}
+
+#recule{
+    position: absolute;
+    bottom: 25%;
+    right: 15%;
+    border: 1px solid gray;
+    background-color: rgb(255, 255, 255, .5);
+    z-index: 1;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: large;
+}
+
+#recule:active{
+    background-color: rgba(112, 112, 112, 0.5); 
+}
+
+#gauche{
+    position: absolute;
+    top: 46%;
+    left: 72%;
+    border: 1px solid gray;
+    background-color: rgba(255, 255, 255, .5);
+    z-index: 1;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: large;
+}
+
+#gauche:active{
+    background-color: rgba(112, 112, 112, 0.5); 
+}
+
+#droite{
+    position: absolute;
+    top: 46%;
+    right: 5%;
+    border: 1px solid gray;
+    background-color: rgb(255, 255, 255, .5);
+    z-index: 1;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: large;
+}
+
+#droite:active{
+    background-color: rgba(112, 112, 112, 0.5); 
+}
