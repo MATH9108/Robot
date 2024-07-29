@@ -11,14 +11,14 @@
     <div id="joystick-container">
         <div id="joystick"></div>
     </div>
-    <button id="firedroite" onclick="">Fire</button>
-    <button id="firegauche" onclick="">Fire</button>
-    <button id="avance" onclick="">▲</button>
-    <button id="recule" onclick="">▼</button>
-    <button id="droite" onclick="">▶</button>
-    <button id="gauche" onclick="">◀</button>
+    <button id="firedroite" disabled>Fire</button>
+    <button id="firegauche" disabled>Fire</button>
+    <button id="avance" disabled>▲</button>
+    <button id="recule" disabled>▼</button>
+    <button id="droite" disabled>▶</button>
+    <button id="gauche" disabled>◀</button>
     <button id="reconnection" onclick="connectWebSocket()">Reconnecte</button>
-    <button id="arret" onclick="">Arret</button>
+    <button id="arret" disabled>Arret</button>
     <script>
         const remoteVideo = document.getElementById('remoteVideo');
         const peerConnection = new RTCPeerConnection();
@@ -104,6 +104,123 @@
                 socket.send(JSON.stringify({ type: 'candidate', data: event.candidate }));
             }
         };
+        
+        var degree = "000"
+        var avance = 3
+        var recule = 1
+        var droite = 2
+        var gauche = 4
+        var firedroite = 5
+        var firegauche = 6
+
+        let bluetoothDevice;
+        let characteristic;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await connectBluetooth();
+                document.getElementById('avance').disabled = false;
+                document.getElementById('recule').disabled = false;
+                document.getElementById('gauche').disabled = false;
+                document.getElementById('droite').disabled = false;
+                document.getElementById('firedroite').disabled = false;
+                document.getElementById('firegauche').disabled = false;
+                document.getElementById('arret').disabled = false;
+            } catch (error) {
+                console.error('Bluetooth connection failed:', error);
+            }
+
+            document.getElementById('avance').addEventListener('click', async () => {
+                const data = String(degree) + String(avance) + "#";
+                if (data && characteristic) {
+                    try {
+                        const encoder = new TextEncoder();
+                        const dataArray = encoder.encode(data);
+                        await characteristic.writeValue(dataArray);
+                        console.log('Data sent to Arduino:', data);
+                    } catch (error) {
+                        console.error('Error sending data:', error);
+                    }
+                } else {
+                    alert('Please enter data to send');
+                }
+            });
+
+            document.getElementById('recule').addEventListener('click', async () => {
+                const data = String(degree) + String(recule) + "#";
+                if (data && characteristic) {
+                    try {
+                        const encoder = new TextEncoder();
+                        const dataArray = encoder.encode(data);
+                        await characteristic.writeValue(dataArray);
+                        console.log('Data sent to Arduino:', data);
+                    } catch (error) {
+                        console.error('Error sending data:', error);
+                    }
+                } else {
+                    alert('Please enter data to send');
+                }
+            });
+
+            document.getElementById('droite').addEventListener('click', async () => {
+                const data = String(degree) + String(droite) + "#";
+                if (data && characteristic) {
+                    try {
+                        const encoder = new TextEncoder();
+                        const dataArray = encoder.encode(data);
+                        await characteristic.writeValue(dataArray);
+                        console.log('Data sent to Arduino:', data);
+                    } catch (error) {
+                        console.error('Error sending data:', error);
+                    }
+                } else {
+                    alert('Please enter data to send');
+                }
+            });
+
+            document.getElementById('gauche').addEventListener('click', async () => {
+                const data = String(degree) + String(gauche) + "#";
+                if (data && characteristic) {
+                    try {
+                        const encoder = new TextEncoder();
+                        const dataArray = encoder.encode(data);
+                        await characteristic.writeValue(dataArray);
+                        console.log('Data sent to Arduino:', data);
+                    } catch (error) {
+                        console.error('Error sending data:', error);
+                    }
+                } else {
+                    alert('Please enter data to send');
+                }
+            });
+        });
+
+        async function connectBluetooth() {
+            try {
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['0000ffe0-0000-1000-8000-00805f9b34fb'] }] // UUID du service Bluetooth
+                });
+
+                const server = await bluetoothDevice.gatt.connect();
+                const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
+                characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
+
+                console.log('Bluetooth connected');
+                bluetoothDevice.addEventListener('gattserverdisconnected', handleDisconnection);
+            } catch (error) {
+                console.error('Bluetooth connection error:', error);
+                throw error;
+            }
+        }
+
+        function handleDisconnection() {
+            console.log('Bluetooth disconnected, trying to reconnect...');
+            setTimeout(() => {
+                connectBluetooth().catch(error => {
+                    console.error('Reconnection failed:', error);
+                });
+            }, 1000);
+        }
 
         const joystickContainer = document.getElementById('joystick-container');
         const joystick = document.getElementById('joystick');
@@ -151,13 +268,14 @@
             joystick.style.top = `${limitedY}px`;
 
             const angleInDegrees = (angle * (180 / Math.PI) + 90 + 360) % 360
-            const degree = Math.round(angleInDegrees)
+            degree = Math.round(angleInDegrees)
         }
 
         function resetJoystick() {
             joystick.style.left = '50%';
             joystick.style.top = '50%';
         }
+
     </script>
 </body>
 </html>
