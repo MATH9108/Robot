@@ -5,8 +5,8 @@
 </head>
 <body>
     <h2>Client B (Récepteur)!</h2>
-    <button onclick="connectWebSocket()">Reconnecte</button>
-    <video id="remoteVideo" autoplay playsinline style="width: 100%; height: auto;"></video>
+    <button onclick="connectWebSocket()">Reconnecter</button>
+    <video id="remoteVideo" autoplay playsinline style="width: 100vw; height: 100vh;"></video>
     <script>
         const remoteVideo = document.getElementById('remoteVideo');
         const peerConnection = new RTCPeerConnection();
